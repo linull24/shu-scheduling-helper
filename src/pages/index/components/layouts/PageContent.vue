@@ -47,7 +47,7 @@
         <div>
           <a href="https://beian.miit.gov.cn" target="_blank">沪ICP备19044115号-1</a>
         </div>
-        <a-button class="alternate-to-desktop" href="/m.html" icon="mobile" type="link">
+        <a-button class="alternate-to-desktop" href="/mobile.html" icon="mobile" type="link">
           切换到移动版
         </a-button>
       </div>
