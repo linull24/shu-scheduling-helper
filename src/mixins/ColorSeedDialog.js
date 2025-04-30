@@ -1,4 +1,4 @@
-import {getColorSeed} from '../utils';
+import { getColorSeed } from '../utils/colorUtils';
 
 export const ColorSeedDialogMixin = {
   data() {
