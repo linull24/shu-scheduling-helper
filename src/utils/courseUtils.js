@@ -113,5 +113,4 @@ export function processWithChangeList(changeList, selectedClasses, reservedClass
   });
 }
 
-export const isMacLike = /(Mac|iPhone|iPod|iPad|CrOS)/i.test(navigator.platform) || 
-                        /Chrome.*(CrOS)/i.test(navigator.userAgent);
+export const isMacLike = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
