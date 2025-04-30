@@ -13,9 +13,15 @@ English | [简体中文](./README-zh_CN.md)
 ------
 
 - [Introduction](#introduction)
+  - [Features](#features)
 - [Development](#development)
+  - [API doc (中文)](#api-doc-中文)
+  - [Frontend quick start](#frontend-quick-start)
+  - [Build for production](#build-for-production)
+  - [Directory structure](#directory-structure)
 - [Credits](#credits)
 - [Contributing](#contributing)
+  - [Author](#author)
 - [License](#license)
 
 ## Introduction
@@ -78,7 +84,7 @@ $ yarn build
 │   │   │   ├── components
 │   │   │   │   └── ......
 │   │   │   └── main.js
-│   │   ├── m   # Mobile version
+│   │   ├── mobile   # Mobile version (same component structure as desktop)
 │   │   │   ├── App.vue
 │   │   │   ├── components
 │   │   │   │   └── ......
@@ -94,7 +100,9 @@ $ yarn build
 │   │   └── ......
 │   ├── storage.js   # Data persistence (compression)
 │   ├── store.js   # Core part processing data
-│   └── utils.js   # Some reusable logics
+│   ├── utils
+│   │   ├── colorUtils.js   # Color processing
+│   │   └── courseUtils.js  # Course processing
 └── vue.config.js
 ```
 
