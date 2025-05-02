@@ -156,7 +156,7 @@ export const ClassCardMixin = {
             padding: '8px 6px 5px',
             'border-radius': '8px',
             margin: '1px',
-            'clip-path': this.clipPath, 
+            'clip-path': this.course?.isPreview ? this.clipPath : 'none',
             'background-clip': 'padding-box',
           },
           {
