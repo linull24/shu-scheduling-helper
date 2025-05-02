@@ -61,22 +61,22 @@
   }
 
   .course-name {
-    font-size: 13px;
-    line-height: 17px;
+    font-size: clamp(12px, 1.2vw, 14px);
+    line-height: 1.3;
     overflow: hidden;
-    min-height: 17px;
+    min-height: 1.3em;
     margin-bottom: 1px;
   }
 
   .teacher-name-venue {
-    font-size: 12px;
-    line-height: 16px;
+    font-size: clamp(11px, 1.1vw, 13px);
+    line-height: 1.3;
     overflow: hidden;
-    min-height: 16px;
+    min-height: 1.3em;
   }
 
   .venue {
-    font-size: 12px;
+    font-size: clamp(11px, 1.1vw, 13px);
     line-height: 1.25;
   }
 
@@ -85,7 +85,7 @@
   }
 
   .extra {
-      font-size: 12px;
-      line-height: 1.25;
+    font-size: clamp(11px, 1.1vw, 13px);
+    line-height: 1.25;
   }
 </style>
