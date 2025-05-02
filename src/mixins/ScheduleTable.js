@@ -141,7 +141,7 @@ export const ClassCardMixin = {
             'border-top-width': '3px',
             'border-top-style': 'solid',
             'border-radius': '2px',
-            'clip-path': this.course?.isPreview ? this.clipPath : 'none',
+            'clip-path': this.clipPath,
             'background-clip': 'padding-box',
           },
           {
@@ -156,7 +156,7 @@ export const ClassCardMixin = {
             padding: '8px 6px 5px',
             'border-radius': '8px',
             margin: '1px',
-            'clip-path': this.course?.isPreview ? this.clipPath : 'none',
+            'clip-path':  this.clipPath,
             'background-clip': 'padding-box',
           },
           {
