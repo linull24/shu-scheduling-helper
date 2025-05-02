@@ -5,7 +5,7 @@ import apiConfig from './apiConfig';
 
 import Storage from './storage';
 import { getClassesChangeList, processSelectedClasses, processWithChangeList } from './utils/courseUtils';
-import { setColorSeed } from './utils/colorUtils';
+import { setColorSeed, getColor } from './utils/colorUtils';
 
 
 Vue.use(Vuex);
@@ -584,9 +584,12 @@ export default new Vuex.Store({
       return new Promise((resolve) => {
         let copy = JSON.parse(JSON.stringify(context.state.selectedClasses));
         copy[data['course_id']] = {
-          teacherId: data['teacher_id'],
+          teacherId: data['teacher_id']
         };
+        // First process to set up periods
         processSelectedClasses(copy, context.state.reservedClasses);
+        // Then set color to ensure it's preserved
+        copy[data['course_id']].themeColor = getColor(context.state.reservedClasses[data['course_id']].courseName, 0);
         context.commit('SELECTED_CLASSES', copy);
         let row = context.state.allClassesMap[`${data['course_id']}-${data['teacher_id']}`];
         context.commit('HISTORY_PUSH', {

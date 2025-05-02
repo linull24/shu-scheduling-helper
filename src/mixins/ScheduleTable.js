@@ -115,18 +115,34 @@ export const ClassCardMixin = {
     };
   },
   computed: {
+    clipPath() {
+      const offset = 2; 
+      // eslint-disable-next-line no-constant-condition
+      if (true) {
+        return `polygon(0 0, ${offset}px 100%, 100% ${offset}px)`; // 左上角三角形
+        // eslint-disable-next-line no-constant-condition
+      } else if (true) {
+        return `polygon(0 100%, ${100 - offset}px 0, 100% ${100 - offset}px)`; 
+      } else {
+        return 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'; // 完整矩形
+      }
+    },
     style () {
+      const defaultColor = '#888888'; // Default gray color
+      const color = this.course?.color || defaultColor;
       return {
         'classic': [
           {
             color: 'rgba(255, 255, 255, 0.95)',
-            borderColor: `rgba(${parseInt(this.course.color.substr(1, 2), 16)}, ${parseInt(this.course.color.substr(3, 2), 16)}, ${parseInt(this.course.color.substr(5, 2), 16)}, 1.0)`,
-            background: `rgba(${parseInt(this.course.color.substr(1, 2), 16)}, ${parseInt(this.course.color.substr(3, 2), 16)}, ${parseInt(this.course.color.substr(5, 2), 16)}, 0.75)`,
-            opacity: this.course.isPreview ? '0.5' : '1',
+            borderColor: `rgba(${parseInt(color.substr(1, 2), 16)}, ${parseInt(color.substr(3, 2), 16)}, ${parseInt(color.substr(5, 2), 16)}, 1.0)`, 
+            background: `rgba(${parseInt(color.substr(1, 2), 16)}, ${parseInt(color.substr(3, 2), 16)}, ${parseInt(color.substr(5, 2), 16)}, 0.75)`,
+            opacity: this.course?.isPreview ? '0.5' : '1',
             padding: '4px 5px 5px',
             'border-top-width': '3px',
             'border-top-style': 'solid',
             'border-radius': '2px',
+            'clip-path': this.course?.isPreview ? this.clipPath : 'none',
+            'background-clip': 'padding-box',
           },
           {
             color: 'rgba(255, 255, 255, 0.85)',
@@ -134,15 +150,17 @@ export const ClassCardMixin = {
         ],
         'candy': [
           {
-            color: `rgba(${parseInt(this.course.color.substr(1, 2), 16)}, ${parseInt(this.course.color.substr(3, 2), 16)}, ${parseInt(this.course.color.substr(5, 2), 16)}, 1.0)`,
-            background: `rgba(${parseInt(this.course.color.substr(1, 2), 16)}, ${parseInt(this.course.color.substr(3, 2), 16)}, ${parseInt(this.course.color.substr(5, 2), 16)}, 0.3)`,
-            opacity: this.course.isPreview ? '0.5' : '1',
+            color: `rgba(${parseInt(color.substr(1, 2), 16)}, ${parseInt(color.substr(3, 2), 16)}, ${parseInt(color.substr(5, 2), 16)}, 1.0)`,
+            background: `rgba(${parseInt(color.substr(1, 2), 16)}, ${parseInt(color.substr(3, 2), 16)}, ${parseInt(color.substr(5, 2), 16)}, 0.3)`,
+            opacity: this.course?.isPreview ? '0.5' : '1',
             padding: '8px 6px 5px',
             'border-radius': '8px',
             margin: '1px',
+            'clip-path': this.clipPath, 
+            'background-clip': 'padding-box',
           },
           {
-            color: `rgba(${parseInt(this.course.color.substr(1, 2), 16)}, ${parseInt(this.course.color.substr(3, 2), 16)}, ${parseInt(this.course.color.substr(5, 2), 16)}, 0.8)`,
+            color: `rgba(${parseInt(color.substr(1, 2), 16)}, ${parseInt(color.substr(3, 2), 16)}, ${parseInt(color.substr(5, 2), 16)}, 0.8)`,
           },
         ]
       }
