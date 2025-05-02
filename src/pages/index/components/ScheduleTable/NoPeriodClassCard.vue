@@ -32,7 +32,7 @@
 
 <style scoped>
   .class-card {
-    font-size: 13px;
+    font-size: clamp(12px, 1.2vw, 14px);
     line-height: 1.35;
     display: inline-block;
     margin: 0 4px 4px 0;
@@ -44,19 +44,19 @@
   }
 
   .course-name {
-    font-size: 13px;
+    font-size: clamp(12px, 1.2vw, 14px);
     display: inline-block;
     margin-right: 5px;
   }
 
   .teacher-name-venue {
-    font-size: 12px;
+    font-size: clamp(11px, 1.1vw, 13px);
     display: inline-block;
     color: rgba(255, 255, 255, 0.85);
   }
 
   .venue {
-    font-size: 12px;
+    font-size: clamp(11px, 1.1vw, 13px);
     display: inline-block;
     color: rgba(255, 255, 255, 0.85);
   }
