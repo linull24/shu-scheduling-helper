@@ -1,11 +1,11 @@
 <template>
   <div :style="style" class="class-card">
-    <div class="course-name"><strong>{{ course.courseName }}</strong></div>
-    <div class="teacher-name-venue" v-if="!venue">
+    <div class="course-name" ref="courseName"><strong>{{ course.courseName }}</strong></div>
+    <div class="teacher-name-venue" ref="teacherNameVenue" v-if="!venue">
       {{ course.teacherName }}
     </div>
-    <div class="venue" v-else>
-      <span class="venue-at">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
+    <div class="venue" ref="venueRef" v-else>
+      <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
   </div>
 </template>

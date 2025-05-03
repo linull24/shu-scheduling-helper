@@ -116,15 +116,17 @@ export const ClassCardMixin = {
   },
   computed: {
     clipPath() {
-      const offset = 2; 
-      // eslint-disable-next-line no-constant-condition
-      if (true) {
-        return `polygon(0 0, ${offset}px 100%, 100% ${offset}px)`; // 左上角三角形
-        // eslint-disable-next-line no-constant-condition
-      } else if (true) {
-        return `polygon(0 100%, ${100 - offset}px 0, 100% ${100 - offset}px)`; 
-      } else {
-        return 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'; // 完整矩形
+      const offset = 8;
+      const mode = this.$store.state.settings?.clipPathMode || 'top-left';
+      
+      switch (mode) {
+        case 'top-left':
+          return `polygon(0 0, 0 calc(100% - ${offset}px), calc(100% - ${offset}px) 0`;
+        case 'bottom-right':
+          return `polygon(100% 100%, ${offset}px 100%, 100% ${offset}px)`;
+        case 'full':
+        default:
+          return 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
       }
     },
     style () {
@@ -225,6 +227,7 @@ export const ClassCardMixin = {
         clearTimeout(this.timer);
         this.timer = setTimeout(async () => {
           await this.doShortenCourseName();
+          await this.adjustAllTextElements();
         }, 500);
       }, 0);
     },
@@ -241,7 +244,144 @@ export const ClassCardMixin = {
         }
         await this.$nextTick();
       }
+      await this.adjustAllTextElements();
     },
+
+    async adjustAllTextElements() {
+      await this.$nextTick();
+      const elements = [
+        this.$refs.courseName,
+        this.$refs.teacherNameVenue,
+        this.$refs.venueRef,
+        this.$refs.venueAtRef,
+        this.$refs.extraRef
+      ].filter(Boolean);
+
+      
+      const CONFIG = {
+        MAX_ITERATIONS: 10,
+        INITIAL_STEP_RATIO: 1.0,
+        MIN_STEP_RATIO: 0.85,
+        CLIP_OFFSET: 8,
+        MIN_FONT_SIZE: 8,
+        MIN_LINE_CHARS: 3,
+        Z_INDEX_TOP: 9999,
+        DEBUG_OUTLINE: false
+      };
+
+      for (const el of elements) {
+        if (!el) continue;
+
+        
+        const resetStyles = {
+          fontSize: '',
+          lineHeight: '',
+          padding: '',
+          whiteSpace: '',
+          overflow: '',
+          textOverflow: '',
+          zIndex: '',
+          outline: ''
+        };
+        Object.assign(el.style, resetStyles);
+        await this.$nextTick();
+
+        let iterations = 0;
+        let currentFontSize = parseFloat(
+          window.getComputedStyle(el).fontSize || CONFIG.MIN_FONT_SIZE
+        );
+        let stepRatio = CONFIG.INITIAL_STEP_RATIO;
+
+        
+        while (iterations < CONFIG.MAX_ITERATIONS && currentFontSize > CONFIG.MIN_FONT_SIZE) {
+          const rect = el.getBoundingClientRect();
+          const clipRect = this.$el.getBoundingClientRect();
+
+          
+          const overflow = {
+            right: Math.max(0, rect.right - (clipRect.right - CONFIG.CLIP_OFFSET)),
+            bottom: Math.max(0, rect.bottom - (clipRect.bottom - CONFIG.CLIP_OFFSET)),
+            left: Math.max(0, (clipRect.left + CONFIG.CLIP_OFFSET) - rect.left),
+            top: Math.max(0, (clipRect.top + CONFIG.CLIP_OFFSET) - rect.top)
+          };
+
+          if (Object.values(overflow).every(v => v <= 0)) break;
+
+          const widthRatio = (clipRect.width - 2 * CONFIG.CLIP_OFFSET) / rect.width;
+          const heightRatio = (clipRect.height - 2 * CONFIG.CLIP_OFFSET) / rect.height;
+          const requiredRatio = Math.min(widthRatio, heightRatio);
+          const effectiveRatio = Math.min(requiredRatio, stepRatio);
+
+          currentFontSize = Math.max(
+            CONFIG.MIN_FONT_SIZE,
+            currentFontSize * effectiveRatio
+          );
+          el.style.fontSize = `${currentFontSize}px`;
+          el.style.lineHeight = `${currentFontSize * 1.15}px`;
+          el.style.padding = '1px 2px';
+
+          //缩放步长
+          stepRatio = Math.max(CONFIG.MIN_STEP_RATIO, stepRatio * 0.95);
+          await this.$nextTick();
+          iterations++;
+        }
+
+        // 最小字号
+        if (currentFontSize <= CONFIG.MIN_FONT_SIZE) {
+          el.style.whiteSpace = 'normal';
+          el.style.wordWrap = 'break-word';
+          await this.$nextTick();
+
+          // 短行
+          const hasShortLine = this.checkShortLastLine(el, CONFIG.MIN_LINE_CHARS);
+
+          if (hasShortLine) {
+            Object.assign(el.style, {
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              zIndex: CONFIG.Z_INDEX_TOP.toString()
+            });
+
+            if (CONFIG.DEBUG_OUTLINE) {
+              el.style.outline = '2px dashed rgba(255,0,0,0.3)';
+              el.style.outlineOffset = '-1px';
+            }
+          } else {
+            el.style.zIndex = '';
+            el.style.overflow = 'visible';
+          }
+        }
+      }
+    },
+
+    checkShortLastLine(el, minChars) {
+    
+      const text = el.textContent.trim();
+      const words = text.split(/\s+/g);
+      
+      if (words.length >= 2) {
+        const lastTwoWords = words.slice(-2).join('');
+        if (lastTwoWords.length < minChars) return true;
+      }
+
+       
+      
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const rects = Array.from(range.getClientRects());
+      
+      if (rects.length > 1) {
+        const lastLineRect = rects[rects.length - 1];
+        const avgCharWidth = el.offsetWidth / text.length;
+        const estimatedChars = Math.floor(lastLineRect.width / avgCharWidth);
+        return estimatedChars < minChars;
+      }
+      
+        
+      
+    },
+  
     shortenCourseNameParts() {
       const parts = this.courseNameParts.slice();
       if (parts.length === 0) {
@@ -278,4 +418,4 @@ export const ClassCardMixin = {
       }
     },
   },
-};
+}

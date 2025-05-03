@@ -1,13 +1,13 @@
 <template>
   <div :style="style[theme][0]" class="class-card">
     <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
-    <div class="teacher-name-venue" :style="style[theme][1]" v-if="!venue">
+    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
       {{ course.teacherName }}
     </div>
-    <div class="venue" :style="style[theme][1]" v-else>
-      <span class="venue-at">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
+    <div class="venue" ref="venueRef" :style="style[theme][1]" v-else>
+      <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
-    <div class="extra" :style="style[theme][1]" v-if="course.fortnight || course.lab">
+    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.fortnight || course.lab">
       {{ course.fortnight }} {{ course.lab }}
     </div>
   </div>
