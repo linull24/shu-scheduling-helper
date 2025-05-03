@@ -12,8 +12,20 @@
         <th>{{ index + 1 }}</th>
         <template v-for="(course, index2) in row">
           <td :key="index2" :rowspan="course !== null ? course.span : 1" v-if="course === null || course.first">
-            <ClassCard :theme="ScheduleTableTheme" :course="course" :venue="venueMode" @click.native="handleClassCardClick(course.courseId)"
-                       v-if="course !== null" />
+            <template v-if="course !== null">
+              <ClassCard.bottom-right 
+                v-if="course.clipPathMode === 'bottom-right'"
+                :theme="ScheduleTableTheme" 
+                :course="course" 
+                :venue="venueMode"
+                @click.native="handleClassCardClick(course.courseId)" />
+              <ClassCard
+                v-else
+                :theme="ScheduleTableTheme" 
+                :course="course" 
+                :venue="venueMode"
+                @click.native="handleClassCardClick(course.courseId)" />
+            </template>
           </td>
         </template>
       </tr>
@@ -35,6 +47,7 @@
     name: 'ScheduleTable',
     components: {
       ClassCard,
+      'ClassCard.bottom-right': () => import('./ClassCard.bottom-right'),
     },
     mixins: [ScheduleTableMixin, UseScheduleTableThemeMixin],
   };

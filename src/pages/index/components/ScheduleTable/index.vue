@@ -47,9 +47,22 @@
           </td>
           <template v-for="(course, index2) in row">
             <td :key="index2" :rowspan="course != null ? course.span : 1" v-if="course == null || course.first">
-              <ClassCard :theme="ScheduleTableTheme" :capturing="capturing" :course="course" :venue="venueMode"
-                         @click.native="handleClassCardClick(course.courseId)"
-                         v-if="course != null && !course.qr" />
+              <template v-if="course != null && !course.qr">
+                <ClassCard.bottom-right 
+                  v-if="course.clipPathMode === 'bottom-right'"
+                  :theme="ScheduleTableTheme" 
+                  :capturing="capturing" 
+                  :course="course" 
+                  :venue="venueMode"
+                  @click.native="handleClassCardClick(course.courseId)" />
+                <ClassCard
+                  v-else
+                  :theme="ScheduleTableTheme" 
+                  :capturing="capturing" 
+                  :course="course" 
+                  :venue="venueMode"
+                  @click.native="handleClassCardClick(course.courseId)" />
+              </template>
             </td>
           </template>
         </tr>
@@ -77,6 +90,7 @@
       NoPeriodClassCard,
       // QrCard,
       ClassCard,
+      'ClassCard.bottom-right': () => import('./ClassCard.bottom-right'),
     },
     mixins: [ScheduleTableMixin, UseScheduleTableThemeMixin],
   };

@@ -52,6 +52,8 @@ export const ScheduleTableMixin = {
             isPreview: true,
             fortnight: period[4] ? period[4] + '周' : null,
             lab: period[5],
+            clipPathMode: period[4] === '单' ? 'top-left' : 
+                         period[4] === '双' ? 'bottom-right' : 'full',
           };
         });
         return rows;
@@ -117,7 +119,7 @@ export const ClassCardMixin = {
   computed: {
     clipPath() {
       const offset = 8;
-      const mode = this.$store.state.settings?.clipPathMode || 'bottom-right';
+      const mode = this.course.clipPathMode ;
       
       switch (mode) {
         case 'top-left':
@@ -267,20 +269,19 @@ export const ClassCardMixin = {
         Z_INDEX_TOP: 9999,
         DEBUG_OUTLINE: false,
         CLIP_PATH_POLYGON: {
-          'bottom-right': [ // 右下三角形
-            [0, 0],          // 左上角
-            [1, 0],          // 右上角
-            [1, 1]           // 右下角
+          'bottom-right': [ 
+            [0, 0],          
+            [1, 0],          
+            [1, 1]           
           ],
-          'top-left': [     // 左上三角形
-            [1, 1],         // 右下角
-            [0, 1],          // 左下角
-            [0, 0]           // 左上角
+          'top-left': [     
+            [1, 1],        
+            [0, 1],          
+            [0, 0]          
           ]
         }
       };
 
-      // 向量叉积方向判断
       const pointInTriangle = (p, a, b, c) => {
         const v0 = [c[0]-a[0], c[1]-a[1]];
         const v1 = [b[0]-a[0], b[1]-a[1]];
@@ -324,22 +325,21 @@ export const ClassCardMixin = {
         while (iterations < CONFIG.MAX_ITERATIONS && currentFontSize > CONFIG.MIN_FONT_SIZE) {
           const rect = el.getBoundingClientRect();
           const clipRect = this.$el.getBoundingClientRect();
-          const mode = this.$store.state.settings?.clipPathMode || 'bottom-right';
+          const mode = this.course.clipPathMode;
 
-          if (mode === 'full') break; // 全区域不需要调整
+          if (mode === 'full') break; 
 
-          // 转换为相对坐标系统
           const normalizePoint = (x, y) => [
             (x - clipRect.left) / clipRect.width,
             (y - clipRect.top) / clipRect.height
           ];
 
-          // 检测文字四角是否在三角形内
+
           const checkCorners = [
-            [rect.left, rect.top],      // 左上角
-            [rect.right, rect.top],     // 右上角
-            [rect.right, rect.bottom],  // 右下角
-            [rect.left, rect.bottom]    // 左下角
+            [rect.left, rect.top],      
+            [rect.right, rect.top],    
+            [rect.right, rect.bottom], 
+            [rect.left, rect.bottom]  
           ].map(([x, y]) => {
             const [nx, ny] = normalizePoint(x, y);
             return pointInTriangle(
@@ -350,13 +350,13 @@ export const ClassCardMixin = {
             );
           });
 
-          // 计算溢出比例：在区域外的角点数 / 总角点数
+         
           const overflowRatio = checkCorners.filter(inside => !inside).length / checkCorners.length;
           
           if (overflowRatio === 0) break;
 
-          // 动态调整策略
-          const safetyMargin = 1 - (overflowRatio * 0.3); // 溢出越多缩小越快
+       
+          const safetyMargin = 1 - (overflowRatio * 0.3);
           const widthRatio = (clipRect.width - CONFIG.CLIP_OFFSET) / rect.width * safetyMargin;
           const heightRatio = (clipRect.height - CONFIG.CLIP_OFFSET) / rect.height * safetyMargin;
           

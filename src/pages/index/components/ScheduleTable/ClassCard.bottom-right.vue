@@ -1,15 +1,18 @@
 <template>
   <div :class="_class" :style="style[theme][0]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-    <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
-    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
-      {{ course.teacherName }}
+    
+    
+    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.fortnight || course.lab">
+      {{ course.fortnight }} {{ course.lab }}
     </div>
     <div class="venue" ref="venueRef" :style="style[theme][1]" v-else>
       <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
-    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.fortnight || course.lab">
-      {{ course.fortnight }} {{ course.lab }}
+    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
+      {{ course.teacherName }}
     </div>
+    <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
+
   </div>
 </template>
 
@@ -47,9 +50,9 @@
     left: 1px;
     display: flex;
     overflow: hidden;
-    align-items: flex-start;
+    align-items: flex-end;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: flex-end;
     cursor: pointer;
     user-select: none;
     transition: all 0.2s;
