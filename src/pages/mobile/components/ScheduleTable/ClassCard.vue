@@ -7,8 +7,8 @@
     <div class="venue" ref="venueRef" :style="style[theme][1]" v-else>
       <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
-    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.fortnight || course.lab">
-      {{ course.fortnight }} {{ course.lab }}
+    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if=" course.lab">
+       {{ course.lab }}
     </div>
   </div>
 </template>
