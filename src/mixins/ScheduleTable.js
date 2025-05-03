@@ -117,7 +117,7 @@ export const ClassCardMixin = {
   computed: {
     clipPath() {
       const offset = 8;
-      const mode = this.$store.state.settings?.clipPathMode || 'top-left';
+      const mode = this.$store.state.settings?.clipPathMode || 'bottom-right';
       
       switch (mode) {
         case 'top-left':
@@ -257,7 +257,6 @@ export const ClassCardMixin = {
         this.$refs.extraRef
       ].filter(Boolean);
 
-      
       const CONFIG = {
         MAX_ITERATIONS: 10,
         INITIAL_STEP_RATIO: 1.0,
@@ -266,13 +265,43 @@ export const ClassCardMixin = {
         MIN_FONT_SIZE: 8,
         MIN_LINE_CHARS: 3,
         Z_INDEX_TOP: 9999,
-        DEBUG_OUTLINE: false
+        DEBUG_OUTLINE: false,
+        CLIP_PATH_POLYGON: {
+          'bottom-right': [ // 右下三角形
+            [0, 0],          // 左上角
+            [1, 0],          // 右上角
+            [1, 1]           // 右下角
+          ],
+          'top-left': [     // 左上三角形
+            [1, 1],         // 右下角
+            [0, 1],          // 左下角
+            [0, 0]           // 左上角
+          ]
+        }
+      };
+
+      // 向量叉积方向判断
+      const pointInTriangle = (p, a, b, c) => {
+        const v0 = [c[0]-a[0], c[1]-a[1]];
+        const v1 = [b[0]-a[0], b[1]-a[1]];
+        const v2 = [p[0]-a[0], p[1]-a[1]];
+
+        const dot00 = v0[0]*v0[0] + v0[1]*v0[1];
+        const dot01 = v0[0]*v1[0] + v0[1]*v1[1];
+        const dot02 = v0[0]*v2[0] + v0[1]*v2[1];
+        const dot11 = v1[0]*v1[0] + v1[1]*v1[1];
+        const dot12 = v1[0]*v2[0] + v1[1]*v2[1];
+
+        const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+        const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+        return (u >= 0) && (v >= 0) && (u + v <= 1);
       };
 
       for (const el of elements) {
         if (!el) continue;
 
-        
         const resetStyles = {
           fontSize: '',
           lineHeight: '',
@@ -292,23 +321,45 @@ export const ClassCardMixin = {
         );
         let stepRatio = CONFIG.INITIAL_STEP_RATIO;
 
-        
         while (iterations < CONFIG.MAX_ITERATIONS && currentFontSize > CONFIG.MIN_FONT_SIZE) {
           const rect = el.getBoundingClientRect();
           const clipRect = this.$el.getBoundingClientRect();
+          const mode = this.$store.state.settings?.clipPathMode || 'bottom-right';
 
+          if (mode === 'full') break; // 全区域不需要调整
+
+          // 转换为相对坐标系统
+          const normalizePoint = (x, y) => [
+            (x - clipRect.left) / clipRect.width,
+            (y - clipRect.top) / clipRect.height
+          ];
+
+          // 检测文字四角是否在三角形内
+          const checkCorners = [
+            [rect.left, rect.top],      // 左上角
+            [rect.right, rect.top],     // 右上角
+            [rect.right, rect.bottom],  // 右下角
+            [rect.left, rect.bottom]    // 左下角
+          ].map(([x, y]) => {
+            const [nx, ny] = normalizePoint(x, y);
+            return pointInTriangle(
+              [nx, ny],
+              CONFIG.CLIP_PATH_POLYGON[mode][0],
+              CONFIG.CLIP_PATH_POLYGON[mode][1],
+              CONFIG.CLIP_PATH_POLYGON[mode][2]
+            );
+          });
+
+          // 计算溢出比例：在区域外的角点数 / 总角点数
+          const overflowRatio = checkCorners.filter(inside => !inside).length / checkCorners.length;
           
-          const overflow = {
-            right: Math.max(0, rect.right - (clipRect.right - CONFIG.CLIP_OFFSET)),
-            bottom: Math.max(0, rect.bottom - (clipRect.bottom - CONFIG.CLIP_OFFSET)),
-            left: Math.max(0, (clipRect.left + CONFIG.CLIP_OFFSET) - rect.left),
-            top: Math.max(0, (clipRect.top + CONFIG.CLIP_OFFSET) - rect.top)
-          };
+          if (overflowRatio === 0) break;
 
-          if (Object.values(overflow).every(v => v <= 0)) break;
-
-          const widthRatio = (clipRect.width - 2 * CONFIG.CLIP_OFFSET) / rect.width;
-          const heightRatio = (clipRect.height - 2 * CONFIG.CLIP_OFFSET) / rect.height;
+          // 动态调整策略
+          const safetyMargin = 1 - (overflowRatio * 0.3); // 溢出越多缩小越快
+          const widthRatio = (clipRect.width - CONFIG.CLIP_OFFSET) / rect.width * safetyMargin;
+          const heightRatio = (clipRect.height - CONFIG.CLIP_OFFSET) / rect.height * safetyMargin;
+          
           const requiredRatio = Math.min(widthRatio, heightRatio);
           const effectiveRatio = Math.min(requiredRatio, stepRatio);
 
@@ -320,7 +371,7 @@ export const ClassCardMixin = {
           el.style.lineHeight = `${currentFontSize * 1.15}px`;
           el.style.padding = '1px 2px';
 
-          //缩放步长
+          // 缩放步长
           stepRatio = Math.max(CONFIG.MIN_STEP_RATIO, stepRatio * 0.95);
           await this.$nextTick();
           iterations++;
@@ -335,12 +386,15 @@ export const ClassCardMixin = {
           // 短行
           const hasShortLine = this.checkShortLastLine(el, CONFIG.MIN_LINE_CHARS);
 
+          Object.assign(el.style, {
+            zIndex: CONFIG.Z_INDEX_TOP.toString()
+          });
+          
           if (hasShortLine) {
             Object.assign(el.style, {
               whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              zIndex: CONFIG.Z_INDEX_TOP.toString()
+              overflow: 'visible',
+              textOverflow: 'ellipsis'
             });
 
             if (CONFIG.DEBUG_OUTLINE) {
@@ -348,7 +402,6 @@ export const ClassCardMixin = {
               el.style.outlineOffset = '-1px';
             }
           } else {
-            el.style.zIndex = '';
             el.style.overflow = 'visible';
           }
         }
