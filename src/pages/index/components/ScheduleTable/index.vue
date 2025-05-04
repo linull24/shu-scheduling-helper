@@ -45,11 +45,29 @@
             <p>{{ classPeriods[index][0] }}</p>
             <p>- {{ classPeriods[index][1] }}</p>
           </td>
-          <template v-for="(course, index2) in row">
-            <td :key="index2" :rowspan="course != null ? course.span : 1" v-if="course == null || course.first">
-              <ClassCard :theme="ScheduleTableTheme" :capturing="capturing" :course="course" :venue="venueMode"
-                         @click.native="handleClassCardClick(course.courseId)"
-                         v-if="course != null && !course.qr" />
+          <template v-for="(courses, index2) in row">
+            <td :key="index2" :rowspan="courses.length > 0 && courses[0] != null ? courses[0].span : 1" 
+                v-if="courses.length === 0 || (courses.length > 0 && courses[0] != null && courses[0].first)">
+              <div class="course-stack" v-if="courses.length > 0">
+                <template v-for="(course, courseIndex) in courses">
+                  <ClassCard.bottom-right 
+                    v-if="course != null && !course.qr && course.clipPathMode === 'bottom-right'"
+                    :key="courseIndex"
+                    :theme="ScheduleTableTheme" 
+                    :capturing="capturing" 
+                    :course="course" 
+                    :venue="venueMode"
+                    @click.native="handleClassCardClick(course.courseId)" />
+                  <ClassCard
+                    v-else-if="course != null && !course.qr"
+                    :key="courseIndex"
+                    :theme="ScheduleTableTheme" 
+                    :capturing="capturing" 
+                    :course="course" 
+                    :venue="venueMode"
+                    @click.native="handleClassCardClick(course.courseId)" />
+                </template>
+              </div>
             </td>
           </template>
         </tr>
@@ -77,6 +95,7 @@
       NoPeriodClassCard,
       // QrCard,
       ClassCard,
+      'ClassCard.bottom-right': () => import('./ClassCard.bottom-right'),
     },
     mixins: [ScheduleTableMixin, UseScheduleTableThemeMixin],
   };

@@ -1,4 +1,4 @@
-import {isMacLike} from '../../utils';
+import {isMacLike} from '../../utils/courseUtils';
 
 export const introductionOpenerMixin = {
   methods: {

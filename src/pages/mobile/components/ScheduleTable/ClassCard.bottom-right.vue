@@ -1,21 +1,25 @@
 <template>
-  <div :class="_class" :style="style[theme][0]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-    <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
-    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
-      {{ course.teacherName }}
+  <div :style="style[theme][0]" class="class-card">
+    
+    
+    
+    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.lab">
+      {{ course.lab }}
     </div>
     <div class="venue" ref="venueRef" :style="style[theme][1]" v-else>
       <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
-    <div class="extra" ref="extraRef" :style="style[theme][1]" v-if=" course.lab">
-       {{ course.lab }}
+    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
+      {{ course.teacherName }}
     </div>
+    <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
   </div>
 </template>
 
 <script>
   import { ClassCardMixin } from '../../../../mixins/ScheduleTable';
-  
+
+
   export default {
     name: 'ClassCard',
     props: {
@@ -24,9 +28,11 @@
       },
       venue: {
         type: Boolean,
+        default: false,
       },
       capturing: {
         type: Boolean,
+        default: false,
       },
       theme: {
         type: String,
@@ -37,7 +43,6 @@
 </script>
 
 <style scoped>
-  /*noinspection CssUnusedSymbol*/
   .class-card {
     line-height: 1.35;
     position: absolute;
@@ -47,26 +52,15 @@
     left: 1px;
     display: flex;
     overflow: hidden;
-    align-items: flex-start;
+    align-items: flex-end;
     flex-direction: column;
-    justify-content: flex-start;
-    cursor: pointer;
+    justify-content: flex-end;
+    padding: 8px 6px 5px;
     user-select: none;
-    transition: all 0.2s;
     text-align: left;
+    border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  /*noinspection CssUnusedSymbol*/
-  .class-card.class-card-hover {
-    opacity: 0.75 !important;
-  }
-
-  @media screen and (min-resolution: 2dppx) {
-    /*noinspection CssUnusedSymbol*/
-    .class-card.class-card-hover {
-      transform: scale3d(0.95, 0.95, 1);
-    }
+    margin: 1px;
   }
 
   .course-name {
