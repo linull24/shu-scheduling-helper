@@ -36,12 +36,45 @@ export function getClassesChangeList(before, after, reserved, selected, timeTabl
   });
   for (let key in currentRowsMap) {
     if (currentRowsMap.hasOwnProperty(key)) {
-            if (reserved.hasOwnProperty(currentRowsMap[key]['course_id']) && reserved[currentRowsMap[key]['course_id']].classes.hasOwnProperty(currentRowsMap[key]['teacher_id'])) {
+      if (reserved.hasOwnProperty(currentRowsMap[key]['course_id']) && reserved[currentRowsMap[key]['course_id']].classes.hasOwnProperty(currentRowsMap[key]['teacher_id'])) {
         if (rowsMap.hasOwnProperty(key)) {
           if (selected.hasOwnProperty(currentRowsMap[key]['course_id']) && selected[currentRowsMap[key]['course_id']].teacherId === currentRowsMap[key]['teacher_id'] && currentRowsMap[key]['class_time'] !== rowsMap[key]['class_time']) {
             getPeriods(rowsMap[key]['class_time']).forEach((period) => {
-              let cell = timeTable[period[0]][period[1]];
-              if (cell != null && cell.courseId !== rowsMap[key]['course_id']) {
+              let cellCourses = timeTable[period[0]][period[1]];
+
+              const currentWeekType = period[4]; 
+              
+              // 检查是否有真正的冲突（考虑单双周）
+              let realConflict = false;
+              
+              for (let i = 0; i < cellCourses.length; i++) {
+                const cell = cellCourses[i];
+                if (!cell || cell.courseId === rowsMap[key]['course_id']) continue;
+                const conflictCourseId = cell.courseId;
+                const conflictTeacherId = selected[conflictCourseId].teacherId;
+                const conflictClassTime = reserved[conflictCourseId].classes[conflictTeacherId].classTime;
+                const conflictPeriods = getPeriods(conflictClassTime);
+                const conflictPeriod = conflictPeriods.find(p => 
+                  p[0] === period[0] && p[1] === period[1]
+                );
+                if (conflictPeriod) {
+                  const conflictWeekType = conflictPeriod[4]; // 单双周信息
+
+                  if ((currentWeekType === '单' && conflictWeekType === '双') || 
+                      (currentWeekType === '双' && conflictWeekType === '单')) {
+                    continue;
+                  } else {
+
+                    realConflict = true;
+                    break;
+                  }
+                } else {
+                  realConflict = true;
+                  break;
+                }
+              }
+              
+              if (realConflict) {
                 mutation[key] = Object.assign({
                   type: 'conflicted',
                 }, currentRowsMap[key]);
@@ -71,15 +104,21 @@ export function getClassesChangeList(before, after, reserved, selected, timeTabl
 export function processSelectedClasses(selectedClasses, reservedClasses) {
   let rows = [];
   for (let i = 0; i < 12; i++) {
-    rows.push([null, null, null, null, null]);
+    rows.push([[], [], [], [], []]);
   }
   
   for (let courseId in selectedClasses) {
     if (selectedClasses.hasOwnProperty(courseId)) {
       let teacherId = selectedClasses[courseId].teacherId;
       selectedClasses[courseId].periods = getPeriods(reservedClasses[courseId].classes[teacherId].classTime);
+      
       selectedClasses[courseId].periods.forEach((period) => {
-        rows[period[0]][period[1]] = courseId;
+        const rowIndex = period[0];
+        const colIndex = period[1];
+
+        if (!rows[rowIndex][colIndex].includes(courseId)) {
+          rows[rowIndex][colIndex].push(courseId);
+        }
       });
     }
   }

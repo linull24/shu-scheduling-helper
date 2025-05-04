@@ -31,17 +31,18 @@ export const ScheduleTableMixin = {
         return this.$store.getters.scheduleTableRows;
       } else {
         let rows = JSON.parse(JSON.stringify(this.$store.getters.scheduleTableRows));
+
         rows.forEach((row, i) => {
-          row.forEach((cell, j) => {
-            if (cell !== null
-              && (cell.courseId === this.$store.state.previewClass.courseId
-                || this.$store.state.previewClassConflicts.hasOwnProperty(cell.courseId))) {
-              rows[i][j] = null;
-            }
+          row.forEach((cellCourses, j) => {
+            rows[i][j] = cellCourses.filter(cell => 
+              cell === null || 
+              (cell.courseId !== this.$store.state.previewClass.courseId && 
+               !this.$store.state.previewClassConflicts.hasOwnProperty(cell.courseId))
+            );
           });
         });
         getPeriods(this.$store.state.previewClass.classTime).forEach((period) => {
-          rows[period[0]][period[1]] = {
+          const previewCourse = {
             courseId: this.$store.state.previewClass.courseId,
             courseName: this.$store.state.previewClass.courseName,
             teacherId: this.$store.state.previewClass.teacherId,
@@ -55,7 +56,26 @@ export const ScheduleTableMixin = {
             clipPathMode: period[4] === '单' ? 'top-left' : 
                          period[4] === '双' ? 'bottom-right' : 'full',
           };
+          
+          // 检查是否可以与现有课程共存（单双周交替）
+          const existingCourses = rows[period[0]][period[1]];
+          if (existingCourses.length === 0) {
+            rows[period[0]][period[1]].push(previewCourse);
+          } 
+          else if (existingCourses.length === 1) {
+            const existingCourse = existingCourses[0];
+            
+            if ((previewCourse.fortnight === '单周' && existingCourse.fortnight === '双周') ||
+                (previewCourse.fortnight === '双周' && existingCourse.fortnight === '单周')) {
+              rows[period[0]][period[1]].push(previewCourse);
+            } else {
+              rows[period[0]][period[1]] = [previewCourse];
+            }
+          } else {
+            rows[period[0]][period[1]] = [previewCourse];
+          }
         });
+        
         return rows;
       }
     },
@@ -118,7 +138,7 @@ export const ClassCardMixin = {
   },
   computed: {
     clipPath() {
-      const offset = 8;
+      const offset = 2;
       const mode = this.course.clipPathMode ;
       
       switch (mode) {

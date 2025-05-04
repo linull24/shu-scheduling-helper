@@ -40,6 +40,7 @@ The shu-scheduling-helper project has a frontend part and a backend part. For sa
 - Quick inputting
 - Exporting text, backup and restoring
 - Automatic conflicts solving
+- Support for fortinight courses
 
 |              | Frameworks & Main Libraries                                  |
 | ------------ | ------------------------------------------------------------ |

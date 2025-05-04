@@ -10,22 +10,27 @@
       <tbody>
       <tr :key="index" v-for="(row, index) in rows">
         <th>{{ index + 1 }}</th>
-        <template v-for="(course, index2) in row">
-          <td :key="index2" :rowspan="course !== null ? course.span : 1" v-if="course === null || course.first">
-            <template v-if="course !== null">
-              <ClassCard.bottom-right 
-                v-if="course.clipPathMode === 'bottom-right'"
-                :theme="ScheduleTableTheme" 
-                :course="course" 
-                :venue="venueMode"
-                @click.native="handleClassCardClick(course.courseId)" />
-              <ClassCard
-                v-else
-                :theme="ScheduleTableTheme" 
-                :course="course" 
-                :venue="venueMode"
-                @click.native="handleClassCardClick(course.courseId)" />
-            </template>
+        <template v-for="(courses, index2) in row">
+          <td :key="index2" :rowspan="courses.length > 0 && courses[0] != null ? courses[0].span : 1" 
+              v-if="courses.length === 0 || (courses.length > 0 && courses[0] != null && courses[0].first)">
+            <div class="course-stack" v-if="courses.length > 0">
+              <template v-for="(course, courseIndex) in courses">
+                <ClassCard.bottom-right 
+                  v-if="course != null && course.clipPathMode === 'bottom-right'"
+                  :key="courseIndex"
+                  :theme="ScheduleTableTheme" 
+                  :course="course" 
+                  :venue="venueMode"
+                  @click.native="handleClassCardClick(course.courseId)" />
+                <ClassCard
+                  v-else-if="course != null"
+                  :key="courseIndex"
+                  :theme="ScheduleTableTheme" 
+                  :course="course" 
+                  :venue="venueMode"
+                  @click.native="handleClassCardClick(course.courseId)" />
+              </template>
+            </div>
           </td>
         </template>
       </tr>
@@ -96,5 +101,12 @@
     margin-top: 6px;
     padding: 8px 0;
     text-align: center;
+  }
+  
+  .course-stack {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 48px;
   }
 </style>

@@ -52,28 +52,95 @@ export const ReservedClassesListMixin = {
           for (let teacherId in this.$store.state.reservedClasses[key].classes) {
             if (this.$store.state.reservedClasses[key].classes.hasOwnProperty(teacherId)) {
               let isConflicted = false;
-              getPeriods(this.$store.state.reservedClasses[key].classes[teacherId].classTime).forEach((period) => {
+              const currentClassPeriods = getPeriods(this.$store.state.reservedClasses[key].classes[teacherId].classTime);
+              
+              for (let i = 0; i < currentClassPeriods.length; i++) {
+                const period = currentClassPeriods[i];
+                const currentWeekType = period[4]; 
+                
                 if (!isConflicted) {
-                  let cell = this.$store.getters.scheduleTableRows[period[0]][period[1]];
-                  if (cell !== null && cell.courseId !== key) {
-                    isConflicted = true;
+                  let cells = this.$store.getters.scheduleTableRows[period[0]][period[1]];
+                  if (cells.length > 0 && !cells.every(cell => cell.courseId === key)) {
+                    let realConflict = false;
+                    
+                    for (let j = 0; j < cells.length; j++) {
+                      const cell = cells[j];
+                      if (cell.courseId === key) continue;
+                      const conflictCourseId = cell.courseId;
+                      const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                      const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                      const conflictPeriods = getPeriods(conflictClassTime);
+
+                      const conflictPeriod = conflictPeriods.find(p => 
+                        p[0] === period[0] && p[1] === period[1]
+                      );
+
+                      if (conflictPeriod) {
+                        const conflictWeekType = conflictPeriod[4]; 
+                        if ((currentWeekType === '单' && conflictWeekType === '双') || 
+                            (currentWeekType === '双' && conflictWeekType === '单')) {
+                          continue;
+                        } else {
+                          realConflict = true;
+                          break;
+                        }
+                      } else {
+                        realConflict = true;
+                        break;
+                      }
+                    }
+                    
+                    if (realConflict) {
+                      isConflicted = true;
+                    }
                   } else {
                     let campusCell = this.$store.getters.campusTableRows[period[0]][period[1]];
                     if (campusCell != null && campusCell !== this.$store.state.reservedClasses[key].classes[teacherId].campus) {
                       const cellBefore = period[0] - 1 >= 0 ? this.$store.getters.scheduleTableRows[period[0] - 1][period[1]] : null;
                       const cellAfter = period[0] + 1 < 12 ? this.$store.getters.scheduleTableRows[period[0] + 1][period[1]] : null;
-                      if (cellBefore != null && cellBefore.campus !== this.$store.state.reservedClasses[key].classes[teacherId].campus
-                        && cellBefore.courseId !== this.id) {
-                        isConflicted = true;
+
+                      if (cellBefore != null && cellBefore.courseId !== this.id) {
+
+                        const conflictCourseId = cellBefore.courseId;
+                        const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                        const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                        const conflictPeriods = getPeriods(conflictClassTime);
+                        const conflictPeriod = conflictPeriods.find(p => 
+                          p[0] === period[0] - 1 && p[1] === period[1]
+                        );
+                        
+                        if (!(conflictPeriod && currentWeekType && conflictPeriod[4] && 
+                            ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
+                             (currentWeekType === '双' && conflictPeriod[4] === '单')))) {
+                          if (cellBefore.campus !== this.$store.state.reservedClasses[key].classes[teacherId].campus) {
+                            isConflicted = true;
+                          }
+                        }
                       }
-                      if (cellAfter != null && cellAfter.campus !== this.$store.state.reservedClasses[key].classes[teacherId].campus
-                        && cellAfter.courseId !== this.id) {
-                        isConflicted = true;
+
+                      if (!isConflicted && cellAfter != null && cellAfter.courseId !== this.id) {
+                        const conflictCourseId = cellAfter.courseId;
+                        const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                        const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                        const conflictPeriods = getPeriods(conflictClassTime);
+
+                        const conflictPeriod = conflictPeriods.find(p => 
+                          p[0] === period[0] + 1 && p[1] === period[1]
+                        );
+                        
+                        if (!(conflictPeriod && currentWeekType && conflictPeriod[4] && 
+                            ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
+                             (currentWeekType === '双' && conflictPeriod[4] === '单')))) {
+                          if (cellAfter.campus !== this.$store.state.reservedClasses[key].classes[teacherId].campus) {
+                            isConflicted = true;
+                          }
+                        }
                       }
                     }
                   }
                 }
-              });
+              }
+              
               if (!isConflicted) {
                 flag = false;
                 break;
@@ -149,23 +216,96 @@ export const CourseClassesListMixin = {
       let result = {};
       this.classesKeys.forEach((key) => {
         let courseConflicts = {};
-        getPeriods(this.$store.state.reservedClasses[this.id].classes[key].classTime).forEach((period) => {
-          let cell = this.$store.getters.scheduleTableRows[period[0]][period[1]];
-          if (cell !== null && cell.courseId !== this.id) {
-            courseConflicts[cell.courseId] = 1;
-          } else {
-            let campusCell = this.$store.getters.campusTableRows[period[0]][period[1]];
-            if (campusCell != null && campusCell !== this.$store.state.reservedClasses[this.id].classes[key].campus) {
-              const cellBefore = period[0] - 1 >= 0 ? this.$store.getters.scheduleTableRows[period[0] - 1][period[1]] : null;
-              const cellAfter = period[0] + 1 < 12 ? this.$store.getters.scheduleTableRows[period[0] + 1][period[1]] : null;
-              if (cellBefore != null && cellBefore.campus !== this.$store.state.reservedClasses[this.id].classes[key].campus
-                && cellBefore.courseId !== this.id && courseConflicts[cellBefore.courseId] == null) {
-                courseConflicts[cellBefore.courseId] = 2;
+        const currentClassPeriods = getPeriods(this.$store.state.reservedClasses[this.id].classes[key].classTime);
+        
+        currentClassPeriods.forEach((period) => {
+
+          const currentWeekType = period[4]; 
+          
+          let cells = this.$store.getters.scheduleTableRows[period[0]][period[1]];
+          if (cells.length > 0) {
+            cells.forEach(cell => {
+              if (cell !== null && cell.courseId !== this.id) {
+                
+                const conflictCourseId = cell.courseId;
+                const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                const conflictPeriods = getPeriods(conflictClassTime);
+
+                const conflictPeriod = conflictPeriods.find(p => 
+                  p[0] === period[0] && p[1] === period[1]
+                );
+
+                if (conflictPeriod) {
+                  const conflictWeekType = conflictPeriod[4]; 
+
+                  if ((currentWeekType === '单' && conflictWeekType === '双') || 
+                      (currentWeekType === '双' && conflictWeekType === '单')) {
+                    //continue;
+                  } else {
+                    courseConflicts[cell.courseId] = 1;
+                  }
+                } else {
+                  courseConflicts[cell.courseId] = 1;
+                }
               }
-              if (cellAfter != null && cellAfter.campus !== this.$store.state.reservedClasses[this.id].classes[key].campus
-                && cellAfter.courseId !== this.id && courseConflicts[cellAfter.courseId] == null) {
-                courseConflicts[cellAfter.courseId] = 2;
-              }
+            });
+          }
+          
+
+          let campusCells = this.$store.getters.campusTableRows[period[0]][period[1]];
+          if (campusCells.length > 0) {
+            const currentCampus = this.$store.state.reservedClasses[this.id].classes[key].campus;
+            const hasDifferentCampus = campusCells.some(campus => campus !== currentCampus);
+            
+            if (hasDifferentCampus) {
+              const cellsBefore = period[0] - 1 >= 0 ? this.$store.getters.scheduleTableRows[period[0] - 1][period[1]] : [];
+              const cellsAfter = period[0] + 1 < 12 ? this.$store.getters.scheduleTableRows[period[0] + 1][period[1]] : [];
+              
+
+              cellsBefore.forEach(cell => {
+                if (cell !== null && cell.campus !== currentCampus && cell.courseId !== this.id && courseConflicts[cell.courseId] == null) {
+
+                  const conflictCourseId = cell.courseId;
+                  const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                  const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                  const conflictPeriods = getPeriods(conflictClassTime);
+                
+                  const conflictPeriod = conflictPeriods.find(p => 
+                    p[0] === period[0] - 1 && p[1] === period[1]
+                  );
+                  
+                  if (conflictPeriod && currentWeekType && conflictPeriod[4] && 
+                      ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
+                       (currentWeekType === '双' && conflictPeriod[4] === '单'))) {
+                    //continue;
+                  } else {
+                    courseConflicts[cell.courseId] = 2;
+                  }
+                }
+              });
+
+              cellsAfter.forEach(cell => {
+                if (cell !== null && cell.campus !== currentCampus && cell.courseId !== this.id && courseConflicts[cell.courseId] == null) {
+                  const conflictCourseId = cell.courseId;
+                  const conflictTeacherId = this.$store.state.selectedClasses[conflictCourseId].teacherId;
+                  const conflictClassTime = this.$store.state.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                  const conflictPeriods = getPeriods(conflictClassTime);
+                  
+
+                  const conflictPeriod = conflictPeriods.find(p => 
+                    p[0] === period[0] + 1 && p[1] === period[1]
+                  );
+                  
+                  if (conflictPeriod && currentWeekType && conflictPeriod[4] && 
+                      ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
+                       (currentWeekType === '双' && conflictPeriod[4] === '单'))) {
+                    //continue;
+                  } else {
+                    courseConflicts[cell.courseId] = 2;
+                  }
+                }
+              });
             }
           }
         });
