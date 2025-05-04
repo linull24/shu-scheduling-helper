@@ -87,6 +87,8 @@
 
   .schedule-table td {
     position: relative;
+    height: 100%;
+    padding: 0;
   }
 
   .header-number {
@@ -104,9 +106,15 @@
   }
   
   .course-stack {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 48px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
   }
 </style>

@@ -58,6 +58,8 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin: 1px;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
   }
 
   .course-name {

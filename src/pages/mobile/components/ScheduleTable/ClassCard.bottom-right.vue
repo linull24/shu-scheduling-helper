@@ -6,10 +6,10 @@
     <div class="extra" ref="extraRef" :style="style[theme][1]" v-if="course.lab">
       {{ course.lab }}
     </div>
-    <div class="venue" ref="venueRef" :style="style[theme][1]" v-else>
+    <div class="venue" ref="venueRef" :style="style[theme][1]" v-else-if="venue">
       <span class="venue-at" ref="venueAtRef">@</span>{{ $store.getters.extra(`${course.courseId}-${course.teacherId}`).venue }}
     </div>
-    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-if="!venue">
+    <div class="teacher-name-venue" ref="teacherNameVenue" :style="style[theme][1]" v-else>
       {{ course.teacherName }}
     </div>
     <div class="course-name" ref="courseName"><strong>{{ courseName }}</strong></div>
@@ -57,10 +57,12 @@
     justify-content: flex-end;
     padding: 8px 6px 5px;
     user-select: none;
-    text-align: left;
+    text-align: right;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin: 1px;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
   }
 
   .course-name {
