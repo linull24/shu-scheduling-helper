@@ -1,5 +1,5 @@
 import registerPromiseWorker from 'promise-worker/register';
-import { getPeriods } from '../utils/courseUtils';
+import { getPeriods } from '../utils/course';
 
 
 function concatRegExp (parts) {

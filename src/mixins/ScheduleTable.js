@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
-import { getPeriods, isMacLike } from '../utils/courseUtils';
-import { getColor } from '../utils/colorUtils';
+import { getPeriods, isMacLike } from '../utils/course';
+import { getColor } from '../utils/color';
 
 
 export const ScheduleTableMixin = {

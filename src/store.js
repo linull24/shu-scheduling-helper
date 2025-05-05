@@ -4,8 +4,8 @@ import Vuex from 'vuex';
 import apiConfig from './apiConfig';
 
 import Storage from './storage';
-import { getClassesChangeList, processSelectedClasses, processWithChangeList } from './utils/courseUtils';
-import { setColorSeed, getColor } from './utils/colorUtils';
+import { getClassesChangeList, processSelectedClasses, processWithChangeList } from './utils/course';
+import { setColorSeed, getColor } from './utils/color';
 
 
 Vue.use(Vuex);

@@ -1,5 +1,5 @@
-import { getPeriods } from '../utils/courseUtils';
-import { getColor } from '../utils/colorUtils';
+import { getPeriods } from '../utils/course';
+import { getColor } from '../utils/color';
 
 
 export const ReservedClassesListMixin = {
