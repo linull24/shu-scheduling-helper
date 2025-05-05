@@ -25,6 +25,7 @@ export function getPeriods(str) {
     return periodsCache[str] = result;
   }
 }
+import { hasPeriodConflict } from './CheckConflict';
 
 export function getClassesChangeList(before, after, reserved, selected, timeTable) {
   let rowsMap = {}, currentRowsMap = {}, mutation = {}, result = [];
@@ -41,40 +42,11 @@ export function getClassesChangeList(before, after, reserved, selected, timeTabl
           if (selected.hasOwnProperty(currentRowsMap[key]['course_id']) && selected[currentRowsMap[key]['course_id']].teacherId === currentRowsMap[key]['teacher_id'] && currentRowsMap[key]['class_time'] !== rowsMap[key]['class_time']) {
             getPeriods(rowsMap[key]['class_time']).forEach((period) => {
               let cellCourses = timeTable[period[0]][period[1]];
-
-              const currentWeekType = period[4]; 
               
-              // 检查是否有真正的冲突（考虑单双周）
-              let realConflict = false;
+              // 使用CheckConflict.js中的hasPeriodConflict函数检查是否有冲突
+              let hasConflict = hasPeriodConflict(period, cellCourses, rowsMap[key]['course_id'], selected, reserved);
               
-              for (let i = 0; i < cellCourses.length; i++) {
-                const cell = cellCourses[i];
-                if (!cell || cell.courseId === rowsMap[key]['course_id']) continue;
-                const conflictCourseId = cell.courseId;
-                const conflictTeacherId = selected[conflictCourseId].teacherId;
-                const conflictClassTime = reserved[conflictCourseId].classes[conflictTeacherId].classTime;
-                const conflictPeriods = getPeriods(conflictClassTime);
-                const conflictPeriod = conflictPeriods.find(p => 
-                  p[0] === period[0] && p[1] === period[1]
-                );
-                if (conflictPeriod) {
-                  const conflictWeekType = conflictPeriod[4]; // 单双周信息
-
-                  if ((currentWeekType === '单' && conflictWeekType === '双') || 
-                      (currentWeekType === '双' && conflictWeekType === '单')) {
-                    continue;
-                  } else {
-
-                    realConflict = true;
-                    break;
-                  }
-                } else {
-                  realConflict = true;
-                  break;
-                }
-              }
-              
-              if (realConflict) {
+              if (hasConflict) {
                 mutation[key] = Object.assign({
                   type: 'conflicted',
                 }, currentRowsMap[key]);
@@ -152,4 +124,6 @@ export function processWithChangeList(changeList, selectedClasses, reservedClass
   });
 }
 
-export const isMacLike = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+export function isMacLike() {
+  return /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+}

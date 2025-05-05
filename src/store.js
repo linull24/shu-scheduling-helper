@@ -751,7 +751,8 @@ export default new Vuex.Store({
         // First process to set up periods
         processSelectedClasses(copy, context.state.reservedClasses);
         // Then set color to ensure it's preserved
-        copy[data['course_id']].themeColor = getColor(context.state.reservedClasses[data['course_id']].courseName, 0);
+        const courseName = context.state.reservedClasses[data['course_id']]?.courseName;
+        copy[data['course_id']].themeColor = getColor(courseName, 0);
         context.commit('SELECTED_CLASSES', copy);
         let row = context.state.allClassesMap[`${data['course_id']}-${data['teacher_id']}`];
         context.commit('HISTORY_PUSH', {

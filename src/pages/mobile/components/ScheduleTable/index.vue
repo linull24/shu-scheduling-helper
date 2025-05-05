@@ -15,15 +15,8 @@
               v-if="courses.length === 0 || (courses.length > 0 && courses[0] != null && courses[0].first)">
             <div class="course-stack" v-if="courses.length > 0">
               <template v-for="(course, courseIndex) in courses">
-                <ClassCard.bottom-right 
-                  v-if="course != null && course.clipPathMode === 'bottom-right'"
-                  :key="courseIndex"
-                  :theme="ScheduleTableTheme" 
-                  :course="course" 
-                  :venue="venueMode"
-                  @click.native="handleClassCardClick(course.courseId)" />
                 <ClassCard
-                  v-else-if="course != null"
+                  v-if="course != null"
                   :key="courseIndex"
                   :theme="ScheduleTableTheme" 
                   :course="course" 
@@ -44,7 +37,7 @@
 </template>
 
 <script>
-  import ClassCard from './ClassCard';
+  import ClassCard from './ClassCard.vue';
   import { ScheduleTableMixin } from '../../../../mixins/ScheduleTable';
   import { UseScheduleTableThemeMixin } from '../../../../mixins/common/useScheduleTableTheme';
 
@@ -52,7 +45,6 @@
     name: 'ScheduleTable',
     components: {
       ClassCard,
-      'ClassCard.bottom-right': () => import('./ClassCard.bottom-right'),
     },
     mixins: [ScheduleTableMixin, UseScheduleTableThemeMixin],
   };

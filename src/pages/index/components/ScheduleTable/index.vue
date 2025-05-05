@@ -50,16 +50,8 @@
                 v-if="courses.length === 0 || (courses.length > 0 && courses[0] != null && courses[0].first)">
               <div class="course-stack" v-if="courses.length > 0">
                 <template v-for="(course, courseIndex) in courses">
-                  <ClassCard.bottom-right 
-                    v-if="course != null && !course.qr && course.clipPathMode === 'bottom-right'"
-                    :key="courseIndex"
-                    :theme="ScheduleTableTheme" 
-                    :capturing="capturing" 
-                    :course="course" 
-                    :venue="venueMode"
-                    @click.native="handleClassCardClick(course.courseId)" />
                   <ClassCard
-                    v-else-if="course != null && !course.qr"
+                    v-if="course != null && !course.qr"
                     :key="courseIndex"
                     :theme="ScheduleTableTheme" 
                     :capturing="capturing" 
@@ -84,7 +76,7 @@
 <script>
   import { ScheduleTableMixin } from '../../../../mixins/ScheduleTable';
   import { UseScheduleTableThemeMixin } from '../../../../mixins/common/useScheduleTableTheme'
-  import ClassCard from './ClassCard';
+  import ClassCard from './ClassCard.vue';
   import NoPeriodClassCard from './NoPeriodClassCard';
   // import QrCard from './QrCard';
 
@@ -95,7 +87,6 @@
       NoPeriodClassCard,
       // QrCard,
       ClassCard,
-      'ClassCard.bottom-right': () => import('./ClassCard.bottom-right'),
     },
     mixins: [ScheduleTableMixin, UseScheduleTableThemeMixin],
   };

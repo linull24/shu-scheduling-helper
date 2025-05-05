@@ -1,10 +1,10 @@
 import registerPromiseWorker from 'promise-worker/register';
 import { getPeriods } from '../utils/course';
-
+import { checkWeekTypeConflict } from '../utils/CheckConflict';
 
 function concatRegExp (parts) {
   parts.forEach((part, index) => {
-    parts[index] = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    parts[index] = part.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g, '\\\\\\\\$&');
   });
   return new RegExp(parts.join('.*'), 'i');
 }
@@ -79,16 +79,16 @@ registerPromiseWorker(function (message) {
     const date = message.allClassesExtra[`${data['course_id']}-${data['teacher_id']}`].date;
     return date.indexOf(condition.trim()) < 0;
   };
+  
+  // 使用自定义的getConflicts函数，因为需要适配message对象结构
   const getConflicts = (courseId, classTime, campus) => {
     const courseConflicts = {};
     const currentClassPeriods = getPeriods(classTime);
     
     currentClassPeriods.forEach((period) => {
-      // 获取当前课程的单双周信息
       const currentWeekType = period[4]; 
       const targetCells = message.scheduleTableRows[period[0]][period[1]];
       if (targetCells != null && targetCells.length > 0) {
-
         for (let i = 0; i < targetCells.length; i++) {
           const targetCell = targetCells[i];
           if (targetCell != null && targetCell.courseId !== courseId) {
@@ -105,18 +105,11 @@ registerPromiseWorker(function (message) {
             const conflictTeacherId = message.selectedClasses[conflictCourseId].teacherId;
             const conflictClassTime = message.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
             const conflictPeriods = getPeriods(conflictClassTime);
-            const conflictPeriod = conflictPeriods.find(p => 
-              p[0] === period[0] && p[1] === period[1]
-            );
+            const conflictPeriod = conflictPeriods.find(p => p[0] === period[0] && p[1] === period[1]);
             
             if (conflictPeriod) {
               const conflictWeekType = conflictPeriod[4];
-              
-              // 单双周交替的课程不算冲突
-              if ((currentWeekType === '单' && conflictWeekType === '双') || 
-                  (currentWeekType === '双' && conflictWeekType === '单')) {
-                  //
-              } else {
+              if (!checkWeekTypeConflict(currentWeekType, conflictWeekType)) {
                 courseConflicts[targetCell.courseId] = 1;
               }
             } else {
@@ -127,72 +120,37 @@ registerPromiseWorker(function (message) {
       } else {
         let campusCell = message.campusTableRows[period[0]][period[1]];
         if (campusCell != null && campusCell !== campus) {
+          const checkAdjacentCell = (cells, rowOffset) => {
+            if (!cells || !cells.length) return;
+            
+            for (const cell of cells) {
+              if (cell != null && cell.campus !== campus && cell.courseId !== courseId && courseConflicts[cell.courseId] == null) {
+                const conflictCourseId = cell.courseId;
+                if (!message.selectedClasses[conflictCourseId] || 
+                    !message.reservedClasses[conflictCourseId] || 
+                    !message.reservedClasses[conflictCourseId].classes || 
+                    !message.selectedClasses[conflictCourseId].teacherId || 
+                    !message.reservedClasses[conflictCourseId].classes[message.selectedClasses[conflictCourseId].teacherId]) {
+                  courseConflicts[cell.courseId] = 2;
+                  continue;
+                }
+                
+                const conflictTeacherId = message.selectedClasses[conflictCourseId].teacherId;
+                const conflictClassTime = message.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
+                const conflictPeriods = getPeriods(conflictClassTime);
+                const conflictPeriod = conflictPeriods.find(p => p[0] === period[0] + rowOffset && p[1] === period[1]);
+                
+                if (!(conflictPeriod && currentWeekType && conflictPeriod[4] && 
+                    checkWeekTypeConflict(currentWeekType, conflictPeriod[4]))) {
+                  courseConflicts[cell.courseId] = 2;
+                }
+              }
+            }
+          };     
           const cellBefore = period[0] - 1 >= 0 ? message.scheduleTableRows[period[0] - 1][period[1]] : null;
           const cellAfter = period[0] + 1 < 12 ? message.scheduleTableRows[period[0] + 1][period[1]] : null;
-
-          if (cellBefore != null && cellBefore.length > 0) {
-            for (let i = 0; i < cellBefore.length; i++) {
-              const cell = cellBefore[i];
-              if (cell != null && cell.campus !== campus && cell.courseId !== courseId && courseConflicts[cell.courseId] == null) {
-                const conflictCourseId = cell.courseId;
-                if (!message.selectedClasses[conflictCourseId] || 
-                    !message.reservedClasses[conflictCourseId] || 
-                    !message.reservedClasses[conflictCourseId].classes || 
-                    !message.selectedClasses[conflictCourseId].teacherId || 
-                    !message.reservedClasses[conflictCourseId].classes[message.selectedClasses[conflictCourseId].teacherId]) {
-                  courseConflicts[cell.courseId] = 2;
-                  continue;
-                }
-                
-                const conflictTeacherId = message.selectedClasses[conflictCourseId].teacherId;
-                const conflictClassTime = message.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
-                const conflictPeriods = getPeriods(conflictClassTime);
-                const conflictPeriod = conflictPeriods.find(p => 
-                  p[0] === period[0] - 1 && p[1] === period[1]
-                );
-                
-                if (conflictPeriod && currentWeekType && conflictPeriod[4] && 
-                    ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
-                     (currentWeekType === '双' && conflictPeriod[4] === '单'))) {
-                      continue;
-                } else {
-                  courseConflicts[cell.courseId] = 2;
-                }
-              }
-            }
-          }
-
-          if (cellAfter != null && cellAfter.length > 0) {
-            for (let i = 0; i < cellAfter.length; i++) {
-              const cell = cellAfter[i];
-              if (cell != null && cell.campus !== campus && cell.courseId !== courseId && courseConflicts[cell.courseId] == null) {
-                const conflictCourseId = cell.courseId;
-                if (!message.selectedClasses[conflictCourseId] || 
-                    !message.reservedClasses[conflictCourseId] || 
-                    !message.reservedClasses[conflictCourseId].classes || 
-                    !message.selectedClasses[conflictCourseId].teacherId || 
-                    !message.reservedClasses[conflictCourseId].classes[message.selectedClasses[conflictCourseId].teacherId]) {
-                  courseConflicts[cell.courseId] = 2;
-                  continue;
-                }
-                
-                const conflictTeacherId = message.selectedClasses[conflictCourseId].teacherId;
-                const conflictClassTime = message.reservedClasses[conflictCourseId].classes[conflictTeacherId].classTime;
-                const conflictPeriods = getPeriods(conflictClassTime);
-                const conflictPeriod = conflictPeriods.find(p => 
-                  p[0] === period[0] + 1 && p[1] === period[1]
-                );
-                
-                if (conflictPeriod && currentWeekType && conflictPeriod[4] && 
-                    ((currentWeekType === '单' && conflictPeriod[4] === '双') || 
-                     (currentWeekType === '双' && conflictPeriod[4] === '单'))) {
-                      continue;
-                } else {
-                  courseConflicts[cell.courseId] = 2;
-                }
-              }
-            }
-          }
+          checkAdjacentCell(cellBefore, -1);
+          checkAdjacentCell(cellAfter, 1);
         }
       }
     });
@@ -215,10 +173,10 @@ registerPromiseWorker(function (message) {
         try {
           conditionsRegExp[condition] = new RegExp(message.conditions.search[condition], 'i');
         } catch (e) {
-          conditionsRegExp[condition] = concatRegExp(message.conditions.search[condition].split(/\s+/));
+          conditionsRegExp[condition] = concatRegExp(message.conditions.search[condition].split(/\\s+/));
         }
       } else {
-        conditionsRegExp[condition] = concatRegExp(message.conditions.search[condition].split(/\s+/));
+        conditionsRegExp[condition] = concatRegExp(message.conditions.search[condition].split(/\\s+/));
       }
     }
   }
@@ -358,5 +316,6 @@ registerPromiseWorker(function (message) {
       return 0;
     });
   }
+  
   return rows;
 });

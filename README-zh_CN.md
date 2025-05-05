@@ -72,7 +72,7 @@ $ yarn build
 │   │   │   ├── components
 │   │   │   │   └── ......
 │   │   │   └── main.js
-│   │   ├── mobile   # 移动版
+│   │   ├── mobile   # 移动版页面及组件 (部分组件与桌面版复用)
 │   │   │   ├── App.vue
 │   │   │   ├── components
 │   │   │   │   └── ......
@@ -89,8 +89,10 @@ $ yarn build
 │   ├── storage.js   # 处理数据压缩与持久化
 │   ├── store.js   # Vuex状态管理
 │   ├── utils
-│   │   ├── colorUtils.js   # 颜色处理
-│   │   └── courseUtils.js  # 课程处理
+│   │   ├── AdjustTextSize.js   # 调整文本大小
+│   │   ├── CheckConflict.js    # 检查课程冲突
+│   │   ├── color.js            # 颜色处理
+│   │   └── course.js           # 课程处理
 └── vue.config.js
 ```
 

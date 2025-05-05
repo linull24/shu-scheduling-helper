@@ -102,8 +102,10 @@ $ yarn build
 │   ├── storage.js   # Data persistence (compression)
 │   ├── store.js   # Core part processing data
 │   ├── utils
-│   │   ├── colorUtils.js   # Color processing
-│   │   └── courseUtils.js  # Course processing
+│   │   ├── AdjustTextSize.js   # Adjust text size
+│   │   ├── CheckConflict.js    # Check course conflicts
+│   │   ├── color.js            # Color processing
+│   │   └── course.js           # Course processing
 └── vue.config.js
 ```
 

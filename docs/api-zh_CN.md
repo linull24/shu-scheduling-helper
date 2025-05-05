@@ -335,6 +335,20 @@ ec17f6e2:00000000+1002,00000000-1001
         fortnight: "单周",
         lab: false,
         clipPathMode: "top-left"
+      },
+      {
+        courseId: "11111111",
+        courseName: "高等数学",
+        teacherId: "2001",
+        teacherName: "张教授",
+        campus: "宝山",
+        first: true,
+        span: 3,
+        color: "#2196F3",
+        isPreview: false,
+        fortnight: "双周",
+        lab: false,
+        clipPathMode: "bottom-right"
       }
     ],
     [],
